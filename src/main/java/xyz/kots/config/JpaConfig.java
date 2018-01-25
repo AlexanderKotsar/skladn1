@@ -16,7 +16,6 @@ import javax.sql.DataSource;
 @Configuration
 @EnableTransactionManagement
 @EnableJpaRepositories("xyz.kots.repository")
-//public class JpaConfig implements TransactionManagementConfigurer {
 public class JpaConfig {
 
     @Value("${dataSource.driverClassName}")
@@ -43,24 +42,4 @@ public class JpaConfig {
 
         return new HikariDataSource(config);
     }
-//
-//    @Bean
-//    public LocalContainerEntityManagerFactoryBean configureEntityManagerFactory() {
-//        LocalContainerEntityManagerFactoryBean entityManagerFactoryBean = new LocalContainerEntityManagerFactoryBean();
-//        entityManagerFactoryBean.setDataSource(configureDataSource());
-//        entityManagerFactoryBean.setPackagesToScan("xyz.kots.repository");
-//        entityManagerFactoryBean.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
-//
-//        Properties jpaProperties = new Properties();
-//        jpaProperties.put(org.hibernate.cfg.Environment.DIALECT, dialect);
-//        jpaProperties.put(org.hibernate.cfg.Environment.HBM2DDL_AUTO, hbm2ddlAuto);
-//        entityManagerFactoryBean.setJpaProperties(jpaProperties);
-//
-//        return entityManagerFactoryBean;
-//    }
-//
-//    @Bean
-//    public PlatformTransactionManager annotationDrivenTransactionManager() {
-//        return new JpaTransactionManager();
-//    }
 }
