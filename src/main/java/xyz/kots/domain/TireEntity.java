@@ -35,13 +35,13 @@ public class TireEntity {
     private int height;
 
     @Column
-    private int diameter;
+    private String diameter;
 
     @Column
     private String season;
 
     @Column
-    private int loadIndex;
+    private String loadIndex;
 
     @Column
     private String speedIndex;
@@ -59,7 +59,7 @@ public class TireEntity {
     private String country;
 
     @Column
-    private int year;
+    private String year;
 
     @Column
     private int balance;

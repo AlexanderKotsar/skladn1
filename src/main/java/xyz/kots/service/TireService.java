@@ -50,7 +50,7 @@ public class TireService {
         saveTiresIntoDB(getTiresInfo(FILES_FOLDER + File.separator + excelFile.getOriginalFilename()));
     }
 
-    private void saveTiresIntoDB(List<TireEntity> tireEntities){
+    private void saveTiresIntoDB(List<TireEntity> tireEntities) {
 
         for (TireEntity tireEntity : tireEntities) {
             tireRepository.save(tireEntity);
@@ -101,9 +101,11 @@ public class TireService {
 
                 if (tireNameCell != null && tireNameCell.getCellTypeEnum() == CellType.STRING) {
 
-                    String pattern = "(?<width>\\d{3})/(?<height>\\d{2})\\sR(?<diameter>\\d{2})(?<reinforcedR>C|С)" +
-                            "?\\s(?<brandName>\\w*)\\s(?<modelName1>\\w*)\\s(?<modelName2>\\w*)?\\s?(?<modelName3>\\w*)" +
-                            "?\\s?(?<loadIndex>\\d{2})(?<speedIndex>\\w)\\s?(?<reinforced>\\w{2})?\\s?(?<spikeNonShip>шип)" +
+                    String pattern = "(?<width>\\d{3})/(?<height>\\d{2})\\sR(?<diameter>\\d{2}|\\d*\\W\\d)(?<reinforcedR>C|С)" +
+                            "?\\s(?<brandName>\\w*)\\s(?<modelName1>\\w*)\\s?(?<modelName2>\\w*)?\\s?(?<modelName3>\\w*)" +
+//                            "?\\s(?<indexes>\\d{2,3}\\w|\\w*/\\w*)" +
+                            "?\\s(?<index1>\\d{2,3})(?<index2>[A-Z])?/?(?<index3>\\d{2,3})?(?<index4>[A-Z])" +
+                            "\\s?(?<reinforced>\\w{2})?\\s?(?<spikeNonShip>шип)" +
                             "?\\s?(?<extrasOptions>\\w{2})?";
                     Pattern p = Pattern.compile(pattern);
                     Matcher m = p.matcher(tireNameCell.getStringCellValue());
@@ -113,31 +115,55 @@ public class TireService {
 
                         tireEntity.setWidth(m.matches() ? Integer.parseInt(m.group("width")) : null);
                         tireEntity.setHeight(m.matches() ? Integer.parseInt(m.group("height")) : null);
-                        tireEntity.setDiameter(m.matches() ? Integer.parseInt(m.group("diameter")) : null);
+                        tireEntity.setDiameter(m.matches() ? m.group("diameter") : null);
                         tireEntity.setReinforced(m.group("reinforcedR") != null ? m.group("reinforcedR") : m.group("reinforced") != null ? m.group("reinforced") : null);
                         tireEntity.setBrandName(m.matches() ? m.group("brandName") : null);
 
-                        if (m.group("modelName1")!= null){
+                        if (m.group("modelName1") != null) {
                             modelName = modelName + m.group("modelName1");
                         }
-                        if (m.group("modelName2")!= null){
+                        if (m.group("modelName2") != null) {
                             modelName = modelName + " " + m.group("modelName2");
                         }
-                        if (m.group("modelName3")!= null){
+                        if (m.group("modelName3") != null) {
                             modelName = modelName + " " + m.group("modelName3");
                         }
                         tireEntity.setModelName(modelName);
 
-                        tireEntity.setLoadIndex(m.matches() ? Integer.parseInt(m.group("loadIndex")) : null);
-                        tireEntity.setSpeedIndex(m.matches() ? m.group("speedIndex") : null);
+                        if (m.group("index1") != null && m.group("index2") != null && m.group("index3") != null && m.group("index4") != null){
+                            tireEntity.setLoadIndex(m.group("index1") + "/" + m.group("index3"));
+                            tireEntity.setSpeedIndex(m.group("index2") + "/" + m.group("index4"));
+                        }else if (m.group("index1") != null && m.group("index3") != null && m.group("index4") != null){
+                            tireEntity.setLoadIndex(m.group("index1") + "/" + m.group("index3"));
+                            tireEntity.setSpeedIndex(m.group("index4"));
+                        }else if (m.group("index1") != null && m.group("index4")!= null){
+                            tireEntity.setLoadIndex(m.group("index1"));
+                            tireEntity.setSpeedIndex(m.group("index4"));
+                        }
                         tireEntity.setSpikeNonShip(m.matches() ? m.group("spikeNonShip") : null);
                         tireEntity.setExtrasOptions(m.matches() ? m.group("extrasOptions") : null);
                     }
                 }
                 tireEntity.setCountry(countryCell != null && countryCell.getCellTypeEnum() == CellType.STRING ? countryCell.getStringCellValue() : null);
                 tireEntity.setBalance(tireBalanceCell != null && tireBalanceCell.getCellTypeEnum() == CellType.NUMERIC ? (int) tireBalanceCell.getNumericCellValue() : 0);
-                tireEntity.setPrice(tirePriceCell != null && tirePriceCell.getCellTypeEnum() == CellType.NUMERIC ? (int) tirePriceCell.getNumericCellValue(): 0);
-                tireEntity.setYear(yearCell != null && yearCell.getCellTypeEnum() == CellType.NUMERIC ? (int) yearCell.getNumericCellValue(): 0);
+                tireEntity.setPrice(tirePriceCell != null && tirePriceCell.getCellTypeEnum() == CellType.NUMERIC ? (int) tirePriceCell.getNumericCellValue() : 0);
+
+
+                if (yearCell != null && yearCell.getCellTypeEnum() == CellType.NUMERIC) {
+                    String year;
+                    String shortenedYear = String.valueOf((int) yearCell.getNumericCellValue());
+
+                    if (shortenedYear.length() == 4) {
+                        year = shortenedYear.substring(0, 2) + " неделя 20" + shortenedYear.substring(2, 4) + " год";
+                    } else if (shortenedYear.length() == 3) {
+                        year = shortenedYear.substring(0, 1) + " неделя 20" + shortenedYear.substring(1, 3) + " год";
+                    } else {
+                        year = "20" + shortenedYear + " год";
+                    }
+
+                    tireEntity.setYear(year);
+                }
+
                 tiresInfo.add(tireEntity); // Add an entry to the list
             }
         }
